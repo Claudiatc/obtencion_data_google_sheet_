@@ -1,6 +1,14 @@
 import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import os
 import pandas as pd
 
+"""agregué otra forma de conectar y funciona bien como la primera.
+ Hice un segundo proyecto y otra cuenta de servicio que falló al abrir el archivo.
+ Si bien, no es la 2° forma la solución, al usar explícitamente los scopes (el alcance de los permisos)
+  me di cuenta que el archivo que estaba solicitando no estaba guardado en mi unidad (fuera del scope)"""
+
+######## PRIMERA FORMA ####################
 
 """se leen las respuestas de Forms desde Google Drive"""
 # seguir pasos previos:
@@ -11,7 +19,7 @@ import pandas as pd
 sa = gspread.service_account()  # el json con keys lo tengo en carpeta ~/.config/gspread/...
 sh = sa.open('reporte_respuestas')  # abrir el archivo
 wks = sh.worksheet('respuestas')  # abrir hoja de trabajo
-df_resp = pd.DataFrame(wks.get_all_records())   # se usa pandas para trabajar como df
+df_resp = pd.DataFrame(wks.get_all_records())  # se usa pandas para trabajar como df
 df_resp_test = df_resp.iloc[[0, 3, 4], :]  # df_resp.drop(index=0)
 df_resp.drop(index=[0, 3, 4], inplace=True)  # se eliminan respuestas que prueban el flujo del instrumento
 df_resp.reset_index(drop=True, inplace=True)
@@ -30,5 +38,18 @@ df_resp['year'] = df_resp.reg_fecha.dt.year
 
 df_resp.to_csv('data/respuestas.csv')
 
+######## PRIMERA FORMA ####################
 
-#%%
+os.chdir('/')
+
+with open('/keys.txt') as k:
+    keys = k.readline()
+
+archivo = 'nombrearchivo'
+gc = gspread.service_account(filename=keys)
+scopes = gc.auth.scopes
+credentials = ServiceAccountCredentials.from_json_keyfile_name(keys, scopes)
+servicio = gspread.authorize(credentials)
+libro = servicio.open(archivo)
+
+# %%
